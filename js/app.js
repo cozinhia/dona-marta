@@ -5,13 +5,10 @@
 
   const els = {
     chatScroll: $("#chatScroll"),
-    sugestoes: $("#sugestoes"),
     composer: $("#composer"),
     chatInput: $("#chatInput"),
     chatStage: $("#chatStage"),
     btnMic: $("#btnMic"),
-    voiceBadge: $("#voiceBadge"),
-    btnVoiceToggle: $("#btnVoiceToggle"),
     waveform: $("#waveform"),
     statusLine: $("#statusLine"),
     avatarStage: $("#avatarStage"),
@@ -23,10 +20,10 @@
     authDetail: $("#authDetail"),
     authAllow: $("#authAllow"),
     authDeny: $("#authDeny"),
-    authVoiceYes: $("#authVoiceYes"),
-    authVoiceNo: $("#authVoiceNo"),
     authVoiceHint: $("#authVoiceHint"),
     hubSubnav: $("#hubSubnav"),
+    infoAccordion: $("#infoAccordion"),
+    infoModuleLabel: $("#infoModuleLabel"),
     notifDrawer: $("#notifDrawer"),
     drawerBackdrop: $("#drawerBackdrop"),
     drawerList: $("#drawerList"),
@@ -85,9 +82,12 @@
     });
   });
 
-  let voiceOn = true;
+  // TTS desligado — só microfone (STT) permanece
+  let voiceOn = false;
+  const ttsEnabled = false;
   let speaking = false;
   let listening = false;
+  let recognition = null;
   let authResolver = null;
   let authListening = false;
   let notifTimer = null;
@@ -281,8 +281,8 @@
     });
     atualizarBadgeNotif();
     if (drawerOpen) renderDrawer();
-    if (!silent && voiceOn && !speaking && !authResolver) {
-      speak(`Nova notificação: ${titulo}. Abra a gaveta de avisos para ver.`);
+    if (!silent) {
+      showToast(`Novo aviso: ${titulo}`);
     }
   }
 
@@ -311,12 +311,10 @@
       }
       els.authOverlay.hidden = false;
 
-      const pergunta =
-        fala ||
-        `Posso ${titulo.toLowerCase()}? Preciso da sua confirmação por voz ou pelo botão Autorizar.`;
-      speak(pergunta).then(() => {
-        if (authResolver && voiceOn) simularEscutaAuth();
-      });
+      // TTS desligado — confirmação só por botão
+      if (els.authVoiceHint) {
+        els.authVoiceHint.textContent = "Use os botões abaixo para autorizar ou negar.";
+      }
     });
   }
 
@@ -360,210 +358,58 @@
     const ok = await pedirAutorizacao({ titulo, detalhe, fala });
     if (!ok) {
       showToast("Ok — não fiz nada.");
-      pushNotifCard({
-        titulo: "Ação cancelada",
-        detalhe: titulo,
-        tipo: "Voz",
-        acaoLabel: "Entendi",
-        onAction: async () => showToast("Ciente.")
-      });
-      await speak("Tudo bem. Não executei nenhuma ação.");
       return false;
     }
     if (onOk) onOk();
     showToast(sucesso || "Ação autorizada e simulada.");
-    pushNotifCard({
-      titulo: "Ação autorizada",
-      detalhe: sucesso || titulo,
-      tipo: "OK",
-      acaoLabel: "Ver avisos",
-      onAction: async () => abrirGaveta()
-    });
-    await speak(sucesso || "Pronto. Ação autorizada.");
     return true;
   }
 
   function syncVoiceControls() {
-    const badgeLabel = $("#voiceBadgeLabel");
-    els.voiceBadge.classList.toggle("off", !voiceOn);
-    if (badgeLabel) badgeLabel.textContent = voiceOn ? "Voz ON" : "Voz OFF";
-
-    if (els.btnVoiceToggle) {
-      els.btnVoiceToggle.setAttribute("aria-pressed", voiceOn ? "true" : "false");
-      els.btnVoiceToggle.textContent = voiceOn ? "Desligar voz" : "Ligar voz";
-      els.btnVoiceToggle.title = voiceOn
-        ? "Desligar o modo voz da Dona Marta"
-        : "Ligar o modo voz da Dona Marta";
-    }
-
     if (els.btnMic) {
-      els.btnMic.classList.toggle("active", voiceOn);
-      els.btnMic.setAttribute("aria-pressed", voiceOn ? "true" : "false");
+      els.btnMic.classList.toggle("listening", listening);
+      els.btnMic.classList.toggle("active", listening);
+      els.btnMic.setAttribute("aria-pressed", listening ? "true" : "false");
     }
   }
 
   function setVoiceUI(mode) {
-    els.voiceBadge.classList.remove("speaking", "listening");
-    els.waveform.classList.toggle("active", mode === "speaking" || mode === "listening");
-    els.avatarStage.classList.toggle("speaking", mode === "speaking");
-    const badgeLabel = $("#voiceBadgeLabel");
-
-    if (mode === "speaking" && voiceOn) {
-      els.voiceBadge.classList.add("speaking");
-      els.voiceBadge.classList.remove("off");
-      els.statusLine.textContent = "Falando o resumo / resposta…";
-      if (badgeLabel) badgeLabel.textContent = "Falando";
-      if (els.btnVoiceToggle) els.btnVoiceToggle.textContent = "Desligar voz";
-    } else if (mode === "listening" && voiceOn) {
-      els.voiceBadge.classList.add("listening");
-      els.voiceBadge.classList.remove("off");
-      els.statusLine.textContent = "Ouvindo confirmação… (simulado)";
-      if (badgeLabel) badgeLabel.textContent = "Ouvindo";
-      if (els.btnVoiceToggle) els.btnVoiceToggle.textContent = "Desligar voz";
-    } else if (voiceOn) {
-      els.voiceBadge.classList.remove("off");
-      els.statusLine.textContent = "Modo voz ativo · pronta para ouvir";
-      if (badgeLabel) badgeLabel.textContent = "Voz ON";
-      if (els.btnVoiceToggle) {
-        els.btnVoiceToggle.textContent = "Desligar voz";
-        els.btnVoiceToggle.setAttribute("aria-pressed", "true");
-      }
-    } else {
-      els.voiceBadge.classList.add("off");
-      els.statusLine.textContent = "Modo voz desligado";
-      els.waveform.classList.remove("active");
-      els.avatarStage.classList.remove("speaking");
-      if (badgeLabel) badgeLabel.textContent = "Voz OFF";
-      if (els.btnVoiceToggle) {
-        els.btnVoiceToggle.textContent = "Ligar voz";
-        els.btnVoiceToggle.setAttribute("aria-pressed", "false");
-      }
+    els.waveform?.classList.toggle("active", mode === "listening");
+    els.avatarStage?.classList.remove("speaking");
+    if (els.statusLine) {
+      els.statusLine.textContent =
+        mode === "listening" ? "Ouvindo… digite por voz" : "Pronta para ajudar";
     }
+    syncVoiceControls();
   }
 
   function pararFala() {
     window.speechSynthesis?.cancel();
     speaking = false;
-    listening = false;
-    authListening = false;
     clearTimeout(speak._fallback);
   }
 
-  function setVoiceMode(on, { announce = true, autoListen = false } = {}) {
-    voiceOn = !!on;
-    if (!voiceOn) {
-      pararFala();
-      setVoiceUI("idle");
-      syncVoiceControls();
-      if (announce) showToast("Modo voz desligado — Dona Marta parou de falar");
-      return;
-    }
-    syncVoiceControls();
+  function setVoiceMode() {
+    voiceOn = false;
+    pararFala();
     setVoiceUI("idle");
-    if (announce) showToast("Modo voz ligado");
-    if (autoListen) simulateListen();
   }
 
-  function speak(text, { force = false } = {}) {
-    return new Promise((resolve) => {
-      if (!voiceOn && !force) {
-        resolve();
-        return;
-      }
-
-      speaking = true;
-      setVoiceUI("speaking");
-
-      const finish = () => {
-        speaking = false;
-        if (!voiceOn) setVoiceUI("idle");
-        else if (listening) setVoiceUI("listening");
-        else setVoiceUI("idle");
-        resolve();
-      };
-
-      if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = "pt-BR";
-        u.rate = 1.04;
-        u.pitch = 1.05;
-
-        const pickVoice = () => {
-          const voices = window.speechSynthesis.getVoices();
-          const pt =
-            voices.find((v) => /pt-BR/i.test(v.lang) && /female|maria|luciana|fernanda|google/i.test(v.name)) ||
-            voices.find((v) => /pt-BR/i.test(v.lang)) ||
-            voices.find((v) => /^pt/i.test(v.lang));
-          if (pt) u.voice = pt;
-        };
-        pickVoice();
-
-        u.onend = finish;
-        u.onerror = finish;
-        window.speechSynthesis.speak(u);
-
-        const approx = Math.min(20000, Math.max(2200, text.length * 52));
-        clearTimeout(speak._fallback);
-        speak._fallback = setTimeout(() => {
-          if (speaking) {
-            window.speechSynthesis.cancel();
-            finish();
-          }
-        }, approx);
-
-        // Se o usuário desligar a voz no meio da fala, encerra
-        const watch = setInterval(() => {
-          if (!voiceOn && speaking) {
-            clearInterval(watch);
-            window.speechSynthesis.cancel();
-            finish();
-          }
-          if (!speaking) clearInterval(watch);
-        }, 200);
-      } else {
-        const approx = Math.min(10000, Math.max(2000, text.length * 35));
-        const t0 = Date.now();
-        const watch = setInterval(() => {
-          if (!voiceOn || Date.now() - t0 >= approx) {
-            clearInterval(watch);
-            finish();
-          }
-        }, 200);
-      }
-    });
+  function speak() {
+    return Promise.resolve();
   }
 
-  function appendMessage({ role, html, chips, hora }) {
+  function appendMessage({ role, html, hora }) {
     const wrap = document.createElement("article");
     wrap.className = `msg ${role}`;
+    const time = hora || agoraHora();
     wrap.innerHTML = `
-      <div class="msg-meta">
-        <span>${role === "marta" ? "Dona Marta" : "Você"}</span>
-        <span>${hora || agoraHora()}</span>
+      <div class="msg-bubble">
+        ${html}
+        <span class="msg-time">${escapeHtml(time)}</span>
+        <div style="clear:both"></div>
       </div>
-      <div class="msg-bubble">${html}</div>
     `;
-
-    if (chips?.length) {
-      const row = document.createElement("div");
-      row.className = "msg-chips";
-      chips.forEach((c) => {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.textContent = c;
-        b.addEventListener("click", () => {
-          if (/aviso|notif/i.test(c)) {
-            abrirGaveta();
-            return;
-          }
-          sendUserText(c);
-        });
-        row.appendChild(b);
-      });
-      wrap.querySelector(".msg-bubble").appendChild(row);
-    }
-
     els.chatScroll.appendChild(wrap);
     els.chatScroll.scrollTop = els.chatScroll.scrollHeight;
     return wrap;
@@ -582,26 +428,7 @@
 
   function resumoHtml() {
     const r = D.resumoDia;
-    const metrics = (r.metricas || [])
-      .map(
-        (m) => `
-      <button type="button" class="metric-row tone-${escapeHtml(m.tom)}" data-tab-jump="${escapeHtml(m.tab)}">
-        <span class="metric-icon" aria-hidden="true">${metricaIcon(m.icon)}</span>
-        <span class="metric-body">
-          <span class="metric-title">${escapeHtml(m.titulo)}</span>
-          <strong class="metric-value">${escapeHtml(m.valor)}</strong>
-          <span class="metric-sub">${escapeHtml(m.sub)}</span>
-        </span>
-        <span class="metric-chev" aria-hidden="true">›</span>
-      </button>`
-      )
-      .join("");
-    return `
-      <div class="resumo-card">
-        <p class="resumo-hello">👋 <strong>${escapeHtml(r.saudacao)}</strong> ${escapeHtml(r.intro)}</p>
-        <div class="metric-list">${metrics}</div>
-      </div>
-    `;
+    return `<p>${escapeHtml(r.saudacao)} ${escapeHtml(r.intro)} Se precisar dos números, abra <strong>Informações</strong> embaixo.</p>`;
   }
 
   function extractSerperQuery(text) {
@@ -1831,7 +1658,7 @@
   function atualizarPlaceholder(id) {
     const list = promptsDoModulo(id);
     if (els.chatInput) {
-      els.chatInput.placeholder = `Ex.: ${list[0]}`;
+      els.chatInput.placeholder = list[0] || "Mensagem";
       els.chatInput.dataset.promptIndex = "0";
     }
   }
@@ -1841,28 +1668,15 @@
     iniciarPlaceholderRotativo._t = setInterval(() => {
       if (!els.chatInput || document.activeElement === els.chatInput) return;
       const list = promptsDoModulo(currentModule);
+      if (!list.length) return;
       const i = (Number(els.chatInput.dataset.promptIndex || 0) + 1) % list.length;
       els.chatInput.dataset.promptIndex = String(i);
-      els.chatInput.placeholder = `Ex.: ${list[i]}`;
-    }, 4200);
+      els.chatInput.placeholder = list[i];
+    }, 5000);
   }
 
   function renderSugestoes() {
-    els.sugestoes.innerHTML = "";
-    const list = [...promptsDoModulo(currentModule).slice(0, 4), "Ver avisos"];
-    list.forEach((s) => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.textContent = s;
-      b.addEventListener("click", () => {
-        if (/aviso|notif/i.test(s)) {
-          abrirGaveta();
-          return;
-        }
-        sendUserText(s);
-      });
-      els.sugestoes.appendChild(b);
-    });
+    /* chat limpo — sem chips de sugestão */
   }
 
   function renderInicioPainel() {
@@ -1940,64 +1754,84 @@
     syncMasterButtons(activeHub);
     renderHubSubnav(activeHub, id);
 
-    $$(".mod-acc").forEach((acc) => {
-      const on = acc.dataset.module === id;
-      acc.hidden = !on;
+    $$(".mod-view").forEach((v) => {
+      const on = v.id === `view-${id}`;
+      v.hidden = !on;
       if (on) {
-        // dados sempre fechados por padrão ao entrar no módulo
-        acc.open = false;
+        els.panelTitle.textContent = v.dataset.title || "Dona Marta";
+        els.panelSub.textContent = v.dataset.sub || "online";
+        if (els.infoModuleLabel) els.infoModuleLabel.textContent = v.dataset.label || "Dados";
       }
     });
 
-    const view = $(`#view-${id}`);
-    if (view) {
-      els.panelTitle.textContent = view.dataset.title || "Chat com a Dona Marta";
-      els.panelSub.textContent =
-        view.dataset.sub || "Pergunte qualquer coisa — os dados ficam nos painéis abaixo";
-    }
+    if (els.infoAccordion) els.infoAccordion.open = false;
 
     atualizarPlaceholder(id);
-    renderSugestoes();
 
-    // mantém o chat em foco visual
     els.chatInput?.focus({ preventScroll: true });
     requestAnimationFrame(() => {
       if (els.chatScroll) els.chatScroll.scrollTop = els.chatScroll.scrollHeight;
     });
   }
 
-  async function simulateListen() {
-    if (!voiceOn) {
-      showToast("Ligue o modo voz para falar com a Dona Marta");
+  function stopListening() {
+    try {
+      recognition?.stop();
+    } catch (_) {}
+    listening = false;
+    setVoiceUI("idle");
+  }
+
+  async function startDictation() {
+    if (listening) {
+      stopListening();
       return;
     }
-    if (speaking) pararFala();
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      recognition = new SR();
+      recognition.lang = "pt-BR";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      listening = true;
+      setVoiceUI("listening");
+      showToast("Ouvindo… fale agora");
+      recognition.onresult = (ev) => {
+        const text = ev.results?.[0]?.[0]?.transcript || "";
+        stopListening();
+        if (text) {
+          els.chatInput.value = text;
+          els.chatInput.focus();
+          showToast("Texto reconhecido");
+        }
+      };
+      recognition.onerror = () => {
+        stopListening();
+        showToast("Não consegui ouvir. Tente de novo.");
+      };
+      recognition.onend = () => {
+        if (listening) stopListening();
+      };
+      try {
+        recognition.start();
+      } catch (_) {
+        stopListening();
+        showToast("Microfone indisponível neste navegador");
+      }
+      return;
+    }
+
+    // Fallback simulado (preenche o campo, não envia sozinho)
     listening = true;
     setVoiceUI("listening");
     showToast("Ouvindo… (simulado)");
-    await delay(1400);
-    if (!voiceOn) {
-      listening = false;
-      setVoiceUI("idle");
-      return;
-    }
-    listening = false;
-    const frases = [
-      "Pesquisar fornecedor de aço em Guarulhos",
-      "Buscar cliente construtora",
-      "Ver estoque",
-      "Alertas urgentes",
-      "Notificações"
-    ];
-    const frase = frases[Math.floor(Math.random() * frases.length)];
-    showToast(`Reconhecido: “${frase}”`);
-    setVoiceUI("idle");
-    await sendUserText(frase);
-  }
-
-  function toggleMic() {
-    if (listening && voiceOn) return;
-    setVoiceMode(!voiceOn, { announce: true, autoListen: false });
+    await delay(1200);
+    const list = promptsDoModulo(currentModule);
+    const frase = list[Math.floor(Math.random() * list.length)] || "Como está a produção?";
+    els.chatInput.value = frase;
+    stopListening();
+    showToast("Texto reconhecido (simulado)");
+    els.chatInput.focus();
   }
 
   function iniciarFilaNotificacoes() {
@@ -2030,42 +1864,15 @@
   }
 
   async function bootGreeting() {
-    setVoiceMode(true, { announce: false, autoListen: false });
-    setVoiceUI("speaking");
-    showToast("Modo voz ativo");
-
+    setVoiceMode();
+    setVoiceUI("idle");
     appendMessage({
       role: "marta",
       html: resumoHtml(),
-      chips: ["Pesquisar fornecedor de aço", "Buscar cliente construtora", "Estoque", "Ver avisos"],
       hora: "07:58"
     });
-
-    await delay(350);
-    const metricasFala = (D.resumoDia.metricas || [])
-      .map((m) => `${m.titulo}: ${m.valor}. ${m.sub}`)
-      .join(" ");
-    const script = [
-      D.resumoDia.saudacao,
-      D.resumoDia.intro,
-      metricasFala,
-      D.resumoDia.fechamento
-    ].join(" ");
-    await speak(script);
-
-    if (!voiceOn) {
-      setVoiceUI("idle");
-      return;
-    }
-
     atualizarBadgeNotif();
-    const primeira = (D.notificacoes || []).find((n) => !n.lida);
-    if (primeira) {
-      await speak(`Você tem avisos na gaveta. O primeiro: ${primeira.titulo}.`);
-    }
-
     iniciarFilaNotificacoes();
-    setVoiceUI("idle");
   }
 
   function bind() {
@@ -2079,7 +1886,7 @@
       btn.addEventListener("click", () => {
         const key = btn.dataset.shortcut;
         if (key === "audio") {
-          setVoiceMode(!voiceOn, { announce: true, autoListen: false });
+          startDictation();
           return;
         }
         if (key === "documentos") {
@@ -2114,38 +1921,14 @@
       sendUserText(els.chatInput.value);
     });
 
-    els.btnVoiceToggle?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      setVoiceMode(!voiceOn, { announce: true, autoListen: false });
-    });
-
     els.btnMic.addEventListener("click", () => {
-      if (els.authOverlay && !els.authOverlay.hidden) {
-        if (!voiceOn) {
-          showToast("Ligue o modo voz para confirmar por voz");
-          return;
-        }
-        confirmarPorVoz(true);
-        return;
-      }
-      if (!voiceOn) {
-        setVoiceMode(true, { announce: true, autoListen: true });
-        return;
-      }
-      if (!listening && !speaking) simulateListen();
+      if (els.authOverlay && !els.authOverlay.hidden) return;
+      startDictation();
     });
 
-    els.voiceBadge?.addEventListener("click", () => {
-      if (els.authOverlay && !els.authOverlay.hidden && voiceOn) {
-        confirmarPorVoz(true);
-      }
-    });
-
-    els.authAllow.addEventListener("click", () => fecharAuth(true));
-    els.authDeny.addEventListener("click", () => fecharAuth(false));
-    els.authVoiceYes?.addEventListener("click", () => confirmarPorVoz(true));
-    els.authVoiceNo?.addEventListener("click", () => confirmarPorVoz(false));
-    els.authOverlay.addEventListener("click", (e) => {
+    els.authAllow?.addEventListener("click", () => fecharAuth(true));
+    els.authDeny?.addEventListener("click", () => fecharAuth(false));
+    els.authOverlay?.addEventListener("click", (e) => {
       if (e.target === els.authOverlay) fecharAuth(false);
     });
 
@@ -2154,13 +1937,6 @@
       if (row) {
         const tab = row.getAttribute("data-tab-jump");
         if (tab) switchTab(tab);
-        return;
-      }
-      const chip = e.target.closest(".msg-chips button");
-      if (chip && /aviso|notif/i.test(chip.textContent || "")) {
-        e.preventDefault();
-        e.stopPropagation();
-        abrirGaveta();
       }
     });
   }
@@ -2170,7 +1946,7 @@
     navigator.serviceWorker.getRegistrations().then((regs) => {
       regs.forEach((r) => r.update());
     });
-    navigator.serviceWorker.register("./sw.js?v=10").catch(() => {});
+    navigator.serviceWorker.register("./sw.js?v=11").catch(() => {});
   }
 
   function init() {
@@ -2191,6 +1967,7 @@
     switchTab("inicio");
     bind();
     registerSW();
+    window.speechSynthesis?.cancel();
     syncVoiceControls();
     setVoiceUI("idle");
     iniciarPlaceholderRotativo();

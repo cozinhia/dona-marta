@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=10" />
+  <link rel="stylesheet" href="css/styles.css?v=11" />
 </head>
 <body>
   <div class="app">
@@ -52,11 +52,11 @@
           </div>
 
           <nav class="side-shortcuts" aria-label="Atalhos gerais">
-            <button type="button" class="side-btn" id="btnAudio" data-shortcut="audio" title="Áudio / modo voz">
+            <button type="button" class="side-btn" id="btnAudio" data-shortcut="audio" title="Microfone — digitar por voz">
               <span class="side-icon tone-blue" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg>
               </span>
-              <strong>Áudio</strong>
+              <strong>Mic</strong>
             </button>
             <button type="button" class="side-btn" data-shortcut="documentos" title="Documentos e NFs">
               <span class="side-icon tone-violet" aria-hidden="true">
@@ -85,24 +85,9 @@
             <div class="panel-header-left">
               <img class="panel-avatar" src="assets/dona-marta-avatar.jpg" alt="" width="40" height="40" />
               <div>
-                <h1 id="panelTitle">Chat com a Dona Marta</h1>
-                <p class="sub" id="panelSub">Pergunte qualquer coisa — os dados ficam nos painéis abaixo</p>
+                <h1 id="panelTitle">Dona Marta</h1>
+                <p class="sub" id="panelSub">online</p>
               </div>
-            </div>
-            <div class="voice-controls">
-              <div class="voice-badge" id="voiceBadge" title="Status do modo voz" aria-live="polite">
-                <span class="dot" aria-hidden="true"></span>
-                <span id="voiceBadgeLabel">Voz ON</span>
-              </div>
-              <button
-                type="button"
-                class="voice-toggle"
-                id="btnVoiceToggle"
-                aria-pressed="true"
-                title="Ligar ou desligar o modo voz"
-              >
-                Desligar voz
-              </button>
             </div>
           </header>
 
@@ -110,95 +95,44 @@
 
           <div class="workspace">
             <section class="chat-stage" id="chatStage" aria-label="Chat principal">
-              <div class="chat-stage-label">Conversa</div>
               <div class="chat-scroll" id="chatScroll" role="log" aria-live="polite"></div>
-              <div class="sugestoes" id="sugestoes"></div>
               <form class="composer" id="composer" autocomplete="off">
-                <button type="button" class="btn-icon active" id="btnMic" title="Modo voz (simulado)" aria-pressed="true">
+                <button type="button" class="btn-icon" id="btnMic" title="Falar para digitar (microfone)" aria-pressed="false">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg>
                 </button>
                 <input
                   type="text"
                   id="chatInput"
-                  placeholder="Ex.: Dona Marta, lance as notas de ontem"
+                  placeholder="Mensagem"
                   aria-label="Mensagem para Dona Marta"
                 />
                 <button type="submit" class="btn-send" title="Enviar">
-                  <span>Enviar</span>
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                 </button>
               </form>
             </section>
 
-            <div class="module-rail" id="moduleRail">
-              <details class="mod-acc" data-module="inicio">
-                <summary>
-                  <span>Resumo e atalhos do dia</span>
-                  <em>opcional</em>
-                </summary>
-                <div class="mod-body" id="view-inicio" data-title="Chat com a Dona Marta" data-sub="Pergunte qualquer coisa — os dados ficam nos painéis abaixo"></div>
-              </details>
-
-              <details class="mod-acc" data-module="agenda" hidden>
-                <summary><span>Agenda — compromissos</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-agenda" data-title="Agenda" data-sub="Fale com a Dona Marta ou abra os dados abaixo"></div>
-              </details>
-
-              <details class="mod-acc" data-module="producao" hidden>
-                <summary><span>Produção — linhas e OPs</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-producao" data-title="Produção" data-sub="Pergunte sobre OEE, linhas e ordens"></div>
-              </details>
-
-              <details class="mod-acc" data-module="equipe" hidden>
-                <summary><span>Equipe — presença e coberturas</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-equipe" data-title="Equipe" data-sub="Pergunte quem faltou ou sobre a escala"></div>
-              </details>
-
-              <details class="mod-acc" data-module="financeiro" hidden>
-                <summary><span>Documentos &amp; NFs</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-financeiro" data-title="Documentos" data-sub="Peça para lançar notas, pagar ou cobrar"></div>
-              </details>
-
-              <details class="mod-acc" data-module="alertas" hidden>
-                <summary><span>Alertas e urgências</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-alertas" data-title="Alertas" data-sub="Peça prioridade ou ação nos alertas"></div>
-              </details>
-
-              <details class="mod-acc" data-module="mensagens" hidden>
-                <summary><span>WhatsApp &amp; e-mails</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-mensagens" data-title="WhatsApp" data-sub="Peça para mandar mensagem a um fornecedor ou cliente"></div>
-              </details>
-
-              <details class="mod-acc" data-module="estoque" hidden>
-                <summary><span>Estoque — saldo e críticos</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-estoque" data-title="Estoque" data-sub="Pergunte o que fazer quando um item acabar"></div>
-              </details>
-
-              <details class="mod-acc" data-module="compras" hidden>
-                <summary><span>Clientes, compras e busca</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-compras" data-title="Clientes &amp; Compras" data-sub="Peça novos clientes ou cotações"></div>
-              </details>
-
-              <details class="mod-acc" data-module="relatorios" hidden>
-                <summary><span>Relatórios e indicadores</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-relatorios" data-title="Relatórios" data-sub="Pergunte como foram as vendas do mês"></div>
-              </details>
-
-              <details class="mod-acc" data-module="marketing" hidden>
-                <summary><span>Marketing — campanhas</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-marketing" data-title="Marketing" data-sub="Peça ideias de campanha ou leads"></div>
-              </details>
-
-              <details class="mod-acc" data-module="pessoal" hidden>
-                <summary><span>Pessoal / RH</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-pessoal" data-title="Pessoal" data-sub="Fale sobre férias, adiantamentos e RH"></div>
-              </details>
-
-              <details class="mod-acc" data-module="treinamento" hidden>
-                <summary><span>Treinamento e NRs</span><em>dados</em></summary>
-                <div class="mod-body view" id="view-treinamento" data-title="Treinamento" data-sub="Pergunte sobre NRs e turmas"></div>
-              </details>
-            </div>
+            <details class="info-acc" id="infoAccordion">
+              <summary>
+                <span>Informações</span>
+                <em id="infoModuleLabel">Início</em>
+              </summary>
+              <div class="info-body" id="infoBody">
+                <div class="mod-view" id="view-inicio" data-title="Dona Marta" data-sub="online" data-label="Início"></div>
+                <div class="mod-view" id="view-agenda" data-title="Agenda" data-sub="online · agenda" data-label="Agenda" hidden></div>
+                <div class="mod-view" id="view-producao" data-title="Produção" data-sub="online · produção" data-label="Produção" hidden></div>
+                <div class="mod-view" id="view-equipe" data-title="Equipe" data-sub="online · equipe" data-label="Equipe" hidden></div>
+                <div class="mod-view" id="view-financeiro" data-title="Documentos" data-sub="online · documentos" data-label="Documentos" hidden></div>
+                <div class="mod-view" id="view-alertas" data-title="Alertas" data-sub="online · alertas" data-label="Alertas" hidden></div>
+                <div class="mod-view" id="view-mensagens" data-title="WhatsApp" data-sub="online · mensagens" data-label="Mensagens" hidden></div>
+                <div class="mod-view" id="view-estoque" data-title="Estoque" data-sub="online · estoque" data-label="Estoque" hidden></div>
+                <div class="mod-view" id="view-compras" data-title="Clientes" data-sub="online · clientes" data-label="Clientes" hidden></div>
+                <div class="mod-view" id="view-relatorios" data-title="Relatórios" data-sub="online · relatórios" data-label="Relatórios" hidden></div>
+                <div class="mod-view" id="view-marketing" data-title="Marketing" data-sub="online · marketing" data-label="Marketing" hidden></div>
+                <div class="mod-view" id="view-pessoal" data-title="Pessoal" data-sub="online · RH" data-label="Pessoal" hidden></div>
+                <div class="mod-view" id="view-treinamento" data-title="Treinamento" data-sub="online · treino" data-label="Treinamento" hidden></div>
+              </div>
+            </details>
           </div>
         </main>
       </div>
@@ -255,19 +189,10 @@
 
   <div class="auth-overlay" id="authOverlay" hidden>
     <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-      <p class="auth-eyebrow">Confirmação por voz ou botão</p>
+      <p class="auth-eyebrow">Confirmação necessária</p>
       <h2 id="authTitle">Confirmar ação</h2>
       <p id="authDetail" class="auth-detail"></p>
-      <p class="auth-voice-hint" id="authVoiceHint">Diga “sim, autorizo” ou “agora não” — ou use os botões.</p>
-      <div class="auth-voice-row">
-        <button type="button" class="btn-voice-confirm" id="authVoiceYes" title="Simular resposta de voz positiva">
-          <span class="mic-mini" aria-hidden="true"></span>
-          Dizer “Sim, autorizo”
-        </button>
-        <button type="button" class="btn-voice-deny" id="authVoiceNo" title="Simular resposta de voz negativa">
-          Dizer “Agora não”
-        </button>
-      </div>
+      <p class="auth-voice-hint" id="authVoiceHint">Use os botões abaixo para autorizar ou negar.</p>
       <div class="auth-actions">
         <button type="button" class="btn-ghost" id="authDeny">Negar</button>
         <button type="button" class="btn-primary" id="authAllow">Autorizar</button>
@@ -277,7 +202,7 @@
 
   <div class="toast" id="toast" role="status"></div>
 
-  <script src="js/data.js?v=10"></script>
-  <script src="js/app.js?v=10"></script>
+  <script src="js/data.js?v=11"></script>
+  <script src="js/app.js?v=11"></script>
 </body>
 </html>
