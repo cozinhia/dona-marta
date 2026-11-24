@@ -28,9 +28,13 @@
     drawerBackdrop: $("#drawerBackdrop"),
     drawerList: $("#drawerList"),
     drawerSub: $("#drawerSub"),
-    notifBadge: $("#notifBadge"),
     drawerClose: $("#drawerClose"),
-    drawerMarkAll: $("#drawerMarkAll")
+    drawerMarkAll: $("#drawerMarkAll"),
+    btnMenu: $("#btnMenu"),
+    shortcutsDrawer: $("#shortcutsDrawer"),
+    shortcutsClose: $("#shortcutsClose"),
+    masterNav: $("#masterNav"),
+    btnMasterExpand: $("#btnMasterExpand")
   };
 
   const HUBS = {
@@ -93,6 +97,8 @@
   let notifTimer = null;
   let activeHub = null;
   let drawerOpen = false;
+  let menuOpen = false;
+  let masterExpandTimer = null;
   let currentModule = "inicio";
 
   const PROMPT_EXAMPLES = [
@@ -181,27 +187,75 @@
 
   function atualizarBadgeNotif() {
     const unread = (D.notificacoes || []).filter((n) => !n.lida).length;
-    if (!els.notifBadge) return;
-    if (unread > 0) {
-      els.notifBadge.hidden = false;
-      els.notifBadge.textContent = String(unread > 9 ? "9+" : unread);
-    } else {
-      els.notifBadge.hidden = true;
-    }
+    $$(".notif-badge").forEach((badge) => {
+      if (unread > 0) {
+        badge.hidden = false;
+        badge.textContent = String(unread > 9 ? "9+" : unread);
+      } else {
+        badge.hidden = true;
+      }
+    });
     if (els.drawerSub) {
       els.drawerSub.textContent =
         unread > 0 ? `${unread} não lidas` : "Tudo em dia";
     }
   }
 
+  function syncBackdrop() {
+    if (!els.drawerBackdrop) return;
+    els.drawerBackdrop.hidden = !(drawerOpen || menuOpen);
+  }
+
+  function abrirMenu() {
+    fecharGaveta();
+    menuOpen = true;
+    if (els.shortcutsDrawer) {
+      els.shortcutsDrawer.classList.add("open");
+      els.shortcutsDrawer.setAttribute("aria-hidden", "false");
+    }
+    if (els.btnMenu) els.btnMenu.setAttribute("aria-expanded", "true");
+    syncBackdrop();
+  }
+
+  function fecharMenu() {
+    menuOpen = false;
+    if (els.shortcutsDrawer) {
+      els.shortcutsDrawer.classList.remove("open");
+      els.shortcutsDrawer.setAttribute("aria-hidden", "true");
+    }
+    if (els.btnMenu) els.btnMenu.setAttribute("aria-expanded", "false");
+    syncBackdrop();
+  }
+
+  function isMobileNav() {
+    return window.matchMedia("(max-width: 900px)").matches;
+  }
+
+  function setMasterExpanded(on) {
+    if (!els.masterNav) return;
+    els.masterNav.classList.toggle("expanded", !!on);
+    if (els.btnMasterExpand) {
+      els.btnMasterExpand.setAttribute("aria-expanded", on ? "true" : "false");
+      els.btnMasterExpand.setAttribute(
+        "aria-label",
+        on ? "Recolher navegação" : "Expandir navegação"
+      );
+    }
+    clearTimeout(masterExpandTimer);
+    if (on && isMobileNav()) {
+      masterExpandTimer = setTimeout(() => setMasterExpanded(false), 3200);
+    }
+  }
+
   function abrirGaveta() {
+    fecharMenu();
     drawerOpen = true;
     renderDrawer();
     if (els.notifDrawer) {
       els.notifDrawer.classList.add("open");
       els.notifDrawer.setAttribute("aria-hidden", "false");
     }
-    if (els.drawerBackdrop) els.drawerBackdrop.hidden = false;
+    syncBackdrop();
   }
 
   function fecharGaveta() {
@@ -210,7 +264,7 @@
       els.notifDrawer.classList.remove("open");
       els.notifDrawer.setAttribute("aria-hidden", "true");
     }
-    if (els.drawerBackdrop) els.drawerBackdrop.hidden = true;
+    syncBackdrop();
   }
 
   function renderDrawer() {
@@ -1877,7 +1931,22 @@
 
   function bind() {
     $$(".master-btn").forEach((btn) => {
-      btn.addEventListener("click", () => openMaster(btn.dataset.master));
+      btn.addEventListener("click", () => {
+        if (isMobileNav()) setMasterExpanded(true);
+        openMaster(btn.dataset.master);
+      });
+    });
+
+    els.btnMasterExpand?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!els.masterNav) return;
+      setMasterExpanded(!els.masterNav.classList.contains("expanded"));
+    });
+
+    els.masterNav?.addEventListener("click", (e) => {
+      if (!isMobileNav()) return;
+      if (e.target.closest(".master-btn") || e.target.closest(".master-expand")) return;
+      setMasterExpanded(!els.masterNav.classList.contains("expanded"));
     });
 
     $("#btnHome")?.addEventListener("click", () => switchTab("inicio"));
@@ -1885,6 +1954,8 @@
     $$("[data-shortcut]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const key = btn.dataset.shortcut;
+        const fromMenu = btn.closest("#shortcutsDrawer");
+        if (fromMenu) fecharMenu();
         if (key === "audio") {
           startDictation();
           return;
@@ -1903,8 +1974,16 @@
       });
     });
 
+    els.btnMenu?.addEventListener("click", () => {
+      menuOpen ? fecharMenu() : abrirMenu();
+    });
+    els.shortcutsClose?.addEventListener("click", fecharMenu);
+
     els.drawerClose?.addEventListener("click", fecharGaveta);
-    els.drawerBackdrop?.addEventListener("click", fecharGaveta);
+    els.drawerBackdrop?.addEventListener("click", () => {
+      fecharGaveta();
+      fecharMenu();
+    });
     els.drawerMarkAll?.addEventListener("click", async () => {
       await acaoComAuth({
         titulo: "Marcar todas como lidas",
@@ -1939,6 +2018,22 @@
         if (tab) switchTab(tab);
       }
     });
+
+    let lastScrollY = 0;
+    els.chatScroll?.addEventListener(
+      "scroll",
+      () => {
+        if (!isMobileNav() || !els.masterNav?.classList.contains("expanded")) return;
+        const y = els.chatScroll.scrollTop;
+        if (Math.abs(y - lastScrollY) > 24) setMasterExpanded(false);
+        lastScrollY = y;
+      },
+      { passive: true }
+    );
+
+    window.addEventListener("resize", () => {
+      if (!isMobileNav()) setMasterExpanded(false);
+    });
   }
 
   function registerSW() {
@@ -1946,7 +2041,7 @@
     navigator.serviceWorker.getRegistrations().then((regs) => {
       regs.forEach((r) => r.update());
     });
-    navigator.serviceWorker.register("./sw.js?v=11").catch(() => {});
+    navigator.serviceWorker.register("./sw.js?v=13").catch(() => {});
   }
 
   function init() {
