@@ -9,6 +9,7 @@
     alertList: $("#alertList"),
     catList: $("#catList"),
     btnOpenChat: $("#btnOpenChat"),
+    btnHomePlay: $("#btnHomePlay"),
     btnBackHome: $("#btnBackHome"),
     chatScroll: $("#chatScroll"),
     chatStatus: $("#chatStatus"),
@@ -47,9 +48,14 @@
     els.screenChat.hidden = true;
   }
 
-  function showChat() {
+  function showChat(opts = {}) {
     els.screenHome.hidden = true;
     els.screenChat.hidden = false;
+    if (opts.startPlay) {
+      clearChat();
+      runPlay();
+      return;
+    }
     if (!els.chatScroll.children.length) {
       appendMarta(
         "Bom dia! Aqui está o resumo do seu negócio hoje.\nSe precisar dos números, volte à página inicial — ou só me peça no chat."
@@ -267,7 +273,8 @@
   }
 
   function bind() {
-    els.btnOpenChat.addEventListener("click", showChat);
+    els.btnOpenChat.addEventListener("click", () => showChat());
+    els.btnHomePlay?.addEventListener("click", () => showChat({ startPlay: true }));
     els.btnBackHome.addEventListener("click", showHome);
 
     els.btnPlay.addEventListener("click", () => {
@@ -307,7 +314,7 @@
 
   function registerSW() {
     if (!("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.register("./sw.js?v=20").catch(() => {});
+    navigator.serviceWorker.register("./sw.js?v=21").catch(() => {});
   }
 
   function init() {

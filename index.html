@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=20" />
+  <link rel="stylesheet" href="css/styles.css?v=21" />
 </head>
 <body>
   <div class="app">
@@ -31,6 +31,24 @@
       </header>
 
       <div class="home-scroll">
+        <section class="home-pitch" aria-labelledby="pitchTitle">
+          <p class="pitch-eyebrow">Para o investidor</p>
+          <h2 id="pitchTitle">Secretária de IA que o dono entende</h2>
+          <p class="pitch-text">
+            O empresário não precisa saber de tecnologia. Ele conversa como no WhatsApp —
+            a Dona Marta organiza o dia, pede autorização e executa.
+          </p>
+          <button type="button" class="btn-home-play" id="btnHomePlay">
+            <span class="play-orb" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </span>
+            <span>
+              <strong>Play — ver demonstração</strong>
+              <em>1 minuto · chat ao vivo com overlays</em>
+            </span>
+          </button>
+        </section>
+
         <section class="home-block" aria-labelledby="avisosTitle">
           <h2 id="avisosTitle">Avisos importantes</h2>
           <div class="alert-list" id="alertList"></div>
@@ -111,7 +129,7 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=20"></script>
-  <script src="js/app.js?v=20"></script>
+  <script src="js/data.js?v=21"></script>
+  <script src="js/app.js?v=21"></script>
 </body>
 </html>

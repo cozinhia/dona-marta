@@ -1,10 +1,10 @@
-const CACHE = "dona-marta-v20";
+const CACHE = "dona-marta-v21";
 const ASSETS = [
   "./",
   "./index.html",
-  "./css/styles.css?v=20",
-  "./js/data.js?v=20",
-  "./js/app.js?v=20",
+  "./css/styles.css?v=21",
+  "./js/data.js?v=21",
+  "./js/app.js?v=21",
   "./manifest.json",
   "./assets/dona-marta-avatar.jpg",
   "./icons/icon-192.png",

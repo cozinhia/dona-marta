@@ -127,6 +127,93 @@ input {
   gap: 18px;
 }
 
+.home-pitch {
+  background: linear-gradient(145deg, #075e54 0%, #128c7e 55%, #0f766e 100%);
+  color: #fff;
+  border-radius: 20px;
+  padding: 18px 16px 16px;
+  box-shadow: 0 14px 32px rgba(7, 94, 84, 0.28);
+}
+
+.pitch-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+.home-pitch h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-bottom: 8px;
+  text-transform: none;
+  color: #fff;
+}
+
+.pitch-text {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  font-weight: 600;
+  opacity: 0.92;
+  margin-bottom: 14px;
+}
+
+.btn-home-play {
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--verde-escuro);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.btn-home-play:active {
+  transform: scale(0.985);
+}
+
+.play-orb {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--whats);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.play-orb svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  margin-left: 2px;
+}
+
+.btn-home-play strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.btn-home-play em {
+  display: block;
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
 .home-block h2 {
   font-size: 0.78rem;
   font-weight: 800;
