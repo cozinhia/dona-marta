@@ -1,0 +1,18 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.log
+
+# Dependencies / env
+node_modules/
+.env
+.env.*
+!.env.example
+
+# Build / deploy
+.vercel/
+dist/
+.cache/

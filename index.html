@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#5B8DEF" />
+  <meta name="description" content="Dona Marta — assistente executiva da Metalúrgica Almeida" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Dona Marta</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css?v=9" />
+</head>
+<body>
+  <div class="app">
+    <div class="board">
+      <div class="shell">
+        <aside class="avatar-panel" aria-label="Dona Marta">
+          <button type="button" class="brand brand-home" id="btnHome" title="Voltar ao chat">
+            <div class="brand-title">
+              Dona Marta
+              <svg class="brand-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.2-4.35-9.6-8.1C.6 9.9 2.1 6 5.7 6c1.8 0 3.15 1.05 3.9 2.1C10.35 7.05 11.7 6 13.5 6c3.6 0 5.1 3.9 3.3 6.9C19.2 16.65 12 21 12 21z"/></svg>
+            </div>
+            <span>Sua assistente de negócios</span>
+          </button>
+
+          <div class="avatar-stage" id="avatarStage">
+            <img
+              src="assets/dona-marta-avatar.jpg"
+              alt="Avatar 3D da Dona Marta"
+              width="320"
+              height="420"
+              draggable="false"
+            />
+          </div>
+
+          <div class="speech-bubble" id="speechBubble">
+            Olá! Eu sou a Dona Marta. Estou aqui para te ajudar a crescer seu negócio todos os dias.
+          </div>
+
+          <div class="avatar-meta">
+            <div class="waveform" id="waveform" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+            </div>
+            <div class="status-line" id="statusLine">Pronta para ajudar</div>
+          </div>
+
+          <nav class="side-shortcuts" aria-label="Atalhos gerais">
+            <button type="button" class="side-btn" id="btnAudio" data-shortcut="audio" title="Áudio / modo voz">
+              <span class="side-icon tone-blue" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg>
+              </span>
+              <strong>Áudio</strong>
+            </button>
+            <button type="button" class="side-btn" data-shortcut="documentos" title="Documentos e NFs">
+              <span class="side-icon tone-violet" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+              </span>
+              <strong>Documentos</strong>
+            </button>
+            <button type="button" class="side-btn" data-shortcut="treinamento" title="Treinamento">
+              <span class="side-icon tone-green" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3 1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
+              </span>
+              <strong>Treino</strong>
+            </button>
+            <button type="button" class="side-btn" id="btnNotif" data-shortcut="notificacoes" title="Notificações">
+              <span class="side-icon tone-orange" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6V11c0-3.07-1.64-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+              </span>
+              <strong>Avisos</strong>
+              <span class="notif-badge" id="notifBadge" hidden>0</span>
+            </button>
+          </nav>
+        </aside>
+
+        <main class="content-panel">
+          <header class="panel-header">
+            <div class="panel-header-left">
+              <img class="panel-avatar" src="assets/dona-marta-avatar.jpg" alt="" width="40" height="40" />
+              <div>
+                <h1 id="panelTitle">Chat</h1>
+                <p class="sub" id="panelSub">Conversa com a Dona Marta</p>
+              </div>
+            </div>
+            <div class="voice-controls">
+              <div class="voice-badge" id="voiceBadge" title="Status do modo voz" aria-live="polite">
+                <span class="dot" aria-hidden="true"></span>
+                <span id="voiceBadgeLabel">Voz ON</span>
+              </div>
+              <button
+                type="button"
+                class="voice-toggle"
+                id="btnVoiceToggle"
+                aria-pressed="true"
+                title="Ligar ou desligar o modo voz"
+              >
+                Desligar voz
+              </button>
+            </div>
+          </header>
+
+          <div class="hub-subnav" id="hubSubnav" hidden></div>
+
+          <section class="view active" id="view-inicio" data-title="Chat" data-sub="Conversa com a Dona Marta">
+            <div class="chat-scroll" id="chatScroll" role="log" aria-live="polite"></div>
+            <div class="sugestoes" id="sugestoes"></div>
+            <form class="composer" id="composer" autocomplete="off">
+              <button type="button" class="btn-icon active" id="btnMic" title="Modo voz (simulado)" aria-pressed="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg>
+              </button>
+              <input
+                type="text"
+                id="chatInput"
+                placeholder="Pergunte à Dona Marta ou use o microfone…"
+                aria-label="Mensagem para Dona Marta"
+              />
+              <button type="submit" class="btn-send" title="Enviar">
+                <span>Enviar</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              </button>
+            </form>
+          </section>
+
+          <section class="view" id="view-agenda" data-title="Agenda" data-sub="Compromissos de hoje"></section>
+          <section class="view" id="view-producao" data-title="Produção" data-sub="Chão de fábrica em tempo real"></section>
+          <section class="view" id="view-equipe" data-title="Equipe" data-sub="Presença e coberturas do turno"></section>
+          <section class="view" id="view-financeiro" data-title="Documentos" data-sub="NFs, caixa e recebimentos"></section>
+          <section class="view" id="view-alertas" data-title="Alertas" data-sub="Itens que precisam da sua atenção"></section>
+          <section class="view" id="view-mensagens" data-title="Mensagens" data-sub="WhatsApp e e-mails"></section>
+          <section class="view" id="view-estoque" data-title="Estoque" data-sub="Saldo, críticos e movimentações"></section>
+          <section class="view" id="view-compras" data-title="Clientes & Compras" data-sub="Pedidos, cotações e busca"></section>
+          <section class="view" id="view-relatorios" data-title="Relatórios" data-sub="Indicadores e desempenho"></section>
+          <section class="view" id="view-marketing" data-title="Marketing" data-sub="Campanhas e clientes"></section>
+          <section class="view" id="view-pessoal" data-title="Pessoal" data-sub="RH, férias e solicitações"></section>
+          <section class="view" id="view-treinamento" data-title="Treinamento" data-sub="NRs, agenda e progresso"></section>
+        </main>
+      </div>
+
+      <nav class="master-nav" role="tablist" aria-label="Navegação principal">
+        <button type="button" class="master-btn tone-orange" data-master="operacao" role="tab">
+          <span class="master-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M22 22H2v-2h20v2zM6.35 10.35l-2.8 2.79 1.41 1.41 2.79-2.8 1.42 1.42L6.35 16l-4.24-4.24 2.82-2.83 1.42 1.42zm7.07-7.07-1.41 1.41 2.83 2.83-1.42 1.41-2.83-2.82-1.41 1.41 4.24 4.24 5.66-5.66-4.24-4.24-1.42 1.42z"/></svg>
+          </span>
+          <strong>Operação</strong>
+        </button>
+        <button type="button" class="master-btn tone-green" data-master="clientes" role="tab">
+          <span class="master-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </span>
+          <strong>Clientes</strong>
+        </button>
+        <button type="button" class="master-btn tone-purple" data-master="marketing" role="tab">
+          <span class="master-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.5-1.5-3.32V15.3c.92-.81 1.5-2 1.5-3.3z"/></svg>
+          </span>
+          <strong>Marketing</strong>
+        </button>
+        <button type="button" class="master-btn tone-blue" data-master="relatorios" role="tab">
+          <span class="master-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3.5 18.5 9 13l3 3 7-7.5V18.5H3.5zM3 4h18v2H3V4zm0 4h12v2H3V8z"/></svg>
+          </span>
+          <strong>Relatórios</strong>
+        </button>
+        <button type="button" class="master-btn tone-pink" data-master="pessoal" role="tab">
+          <span class="master-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </span>
+          <strong>Pessoal</strong>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+  <aside class="notif-drawer" id="notifDrawer" aria-hidden="true" aria-label="Notificações">
+    <header class="drawer-header">
+      <div>
+        <h2>Notificações</h2>
+        <p id="drawerSub">Avisos da planta</p>
+      </div>
+      <button type="button" class="drawer-close" id="drawerClose" aria-label="Fechar gaveta">×</button>
+    </header>
+    <div class="drawer-actions">
+      <button type="button" class="btn-ghost" id="drawerMarkAll">Marcar todas como lidas</button>
+    </div>
+    <div class="drawer-list" id="drawerList"></div>
+  </aside>
+
+  <div class="auth-overlay" id="authOverlay" hidden>
+    <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <p class="auth-eyebrow">Confirmação por voz ou botão</p>
+      <h2 id="authTitle">Confirmar ação</h2>
+      <p id="authDetail" class="auth-detail"></p>
+      <p class="auth-voice-hint" id="authVoiceHint">Diga “sim, autorizo” ou “agora não” — ou use os botões.</p>
+      <div class="auth-voice-row">
+        <button type="button" class="btn-voice-confirm" id="authVoiceYes" title="Simular resposta de voz positiva">
+          <span class="mic-mini" aria-hidden="true"></span>
+          Dizer “Sim, autorizo”
+        </button>
+        <button type="button" class="btn-voice-deny" id="authVoiceNo" title="Simular resposta de voz negativa">
+          Dizer “Agora não”
+        </button>
+      </div>
+      <div class="auth-actions">
+        <button type="button" class="btn-ghost" id="authDeny">Negar</button>
+        <button type="button" class="btn-primary" id="authAllow">Autorizar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="js/data.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
+</body>
+</html>
