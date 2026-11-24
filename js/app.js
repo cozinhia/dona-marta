@@ -8,6 +8,7 @@
     sugestoes: $("#sugestoes"),
     composer: $("#composer"),
     chatInput: $("#chatInput"),
+    chatStage: $("#chatStage"),
     btnMic: $("#btnMic"),
     voiceBadge: $("#voiceBadge"),
     btnVoiceToggle: $("#btnVoiceToggle"),
@@ -92,6 +93,67 @@
   let notifTimer = null;
   let activeHub = null;
   let drawerOpen = false;
+  let currentModule = "inicio";
+
+  const PROMPT_EXAMPLES = [
+    "Dona Marta, lance as notas de ontem",
+    "O estoque de parafuso 5mm está acabando, o que eu faço?",
+    "Como foram as vendas do mês?",
+    "Me ache novos clientes para esse produto",
+    "Manda mensagem no WhatsApp para a metalúrgica X pedindo preço e prazo"
+  ];
+
+  const MODULE_PROMPTS = {
+    inicio: PROMPT_EXAMPLES,
+    estoque: [
+      "O estoque de parafuso 5mm está acabando, o que eu faço?",
+      "Quais itens estão críticos hoje?",
+      "Monte um pedido de reposição de eletrodos"
+    ],
+    financeiro: [
+      "Dona Marta, lance as notas de ontem",
+      "Quais NFs vencem hoje?",
+      "Agende o pagamento da MetalSul"
+    ],
+    compras: [
+      "Me ache novos clientes para esse produto",
+      "Pesquisar fornecedor de aço em Guarulhos",
+      "Compare cotações de bobina SAE 1020"
+    ],
+    mensagens: [
+      "Manda mensagem no WhatsApp para a metalúrgica X pedindo preço e prazo",
+      "Responda o João da Aço Norte",
+      "Prepare um e-mail de cobrança amigável"
+    ],
+    relatorios: [
+      "Como foram as vendas do mês?",
+      "Mostre o OEE da semana",
+      "Qual cliente mais faturou?"
+    ],
+    marketing: [
+      "Sugira uma campanha LinkedIn para o Q4",
+      "Quais leads estão quentes?",
+      "Aprove o print da campanha"
+    ],
+    pessoal: [
+      "Quem pediu adiantamento esta semana?",
+      "Quais férias estão pendentes?",
+      "Resumo do banco de horas"
+    ],
+    treinamento: [
+      "Quem está pendente na NR-12?",
+      "Confirme a turma de solda MIG",
+      "Agenda de treinamentos da semana"
+    ],
+    producao: [
+      "Como está a produção agora?",
+      "Status da linha 3",
+      "Quando o laser volta?"
+    ],
+    agenda: ["Qual a próxima reunião?", "Resumo da agenda de hoje"],
+    alertas: ["Alertas urgentes", "Priorize o estoque crítico"],
+    equipe: ["Quem faltou hoje?", "Como está a cobertura da solda?"]
+  };
   let msgCanal = "whatsapp";
   let waAtivo = D.mensagens.whatsapp[0]?.id || null;
   let comprasPane = "busca";
@@ -1762,10 +1824,33 @@
     if (drawerOpen) renderDrawer();
   }
 
+  function promptsDoModulo(id) {
+    return MODULE_PROMPTS[id] || PROMPT_EXAMPLES;
+  }
+
+  function atualizarPlaceholder(id) {
+    const list = promptsDoModulo(id);
+    if (els.chatInput) {
+      els.chatInput.placeholder = `Ex.: ${list[0]}`;
+      els.chatInput.dataset.promptIndex = "0";
+    }
+  }
+
+  function iniciarPlaceholderRotativo() {
+    if (iniciarPlaceholderRotativo._t) clearInterval(iniciarPlaceholderRotativo._t);
+    iniciarPlaceholderRotativo._t = setInterval(() => {
+      if (!els.chatInput || document.activeElement === els.chatInput) return;
+      const list = promptsDoModulo(currentModule);
+      const i = (Number(els.chatInput.dataset.promptIndex || 0) + 1) % list.length;
+      els.chatInput.dataset.promptIndex = String(i);
+      els.chatInput.placeholder = `Ex.: ${list[i]}`;
+    }, 4200);
+  }
+
   function renderSugestoes() {
     els.sugestoes.innerHTML = "";
-    const extras = ["Pesquisar fornecedor de aço", "Buscar cliente construtora", "Estoque", "Ver avisos"];
-    [...D.sugestoesRapidas.slice(0, 3), ...extras].forEach((s) => {
+    const list = [...promptsDoModulo(currentModule).slice(0, 4), "Ver avisos"];
+    list.forEach((s) => {
       const b = document.createElement("button");
       b.type = "button";
       b.textContent = s;
@@ -1777,6 +1862,34 @@
         sendUserText(s);
       });
       els.sugestoes.appendChild(b);
+    });
+  }
+
+  function renderInicioPainel() {
+    const root = $("#view-inicio");
+    if (!root) return;
+    root.innerHTML = `
+      <div class="tab-scroll" style="padding:12px 14px 16px">
+        <p class="muted" style="margin-bottom:10px">O chat acima é o centro do app. Abra este painel só se quiser ver atalhos rápidos de dados.</p>
+        <div class="metric-list">
+          ${(D.resumoDia.metricas || [])
+            .map(
+              (m) => `
+            <button type="button" class="metric-row tone-${escapeHtml(m.tom)}" data-tab-jump="${escapeHtml(m.tab)}">
+              <span class="metric-icon" aria-hidden="true">${metricaIcon(m.icon)}</span>
+              <span class="metric-body">
+                <span class="metric-title">${escapeHtml(m.titulo)}</span>
+                <strong class="metric-value">${escapeHtml(m.valor)}</strong>
+                <span class="metric-sub">${escapeHtml(m.sub)}</span>
+              </span>
+              <span class="metric-chev">›</span>
+            </button>`
+            )
+            .join("")}
+        </div>
+      </div>`;
+    root.querySelectorAll("[data-tab-jump]").forEach((btn) => {
+      btn.addEventListener("click", () => switchTab(btn.getAttribute("data-tab-jump")));
     });
   }
 
@@ -1820,19 +1933,36 @@
       abrirGaveta();
       return;
     }
+    currentModule = id || "inicio";
     if (id === "inicio" || id === "treinamento") activeHub = null;
     else if (TAB_TO_HUB[id]) activeHub = TAB_TO_HUB[id];
 
     syncMasterButtons(activeHub);
     renderHubSubnav(activeHub, id);
 
-    $$(".view").forEach((v) => {
-      const on = v.id === `view-${id}`;
-      v.classList.toggle("active", on);
+    $$(".mod-acc").forEach((acc) => {
+      const on = acc.dataset.module === id;
+      acc.hidden = !on;
       if (on) {
-        els.panelTitle.textContent = v.dataset.title || "";
-        els.panelSub.textContent = v.dataset.sub || "";
+        // dados sempre fechados por padrão ao entrar no módulo
+        acc.open = false;
       }
+    });
+
+    const view = $(`#view-${id}`);
+    if (view) {
+      els.panelTitle.textContent = view.dataset.title || "Chat com a Dona Marta";
+      els.panelSub.textContent =
+        view.dataset.sub || "Pergunte qualquer coisa — os dados ficam nos painéis abaixo";
+    }
+
+    atualizarPlaceholder(id);
+    renderSugestoes();
+
+    // mantém o chat em foco visual
+    els.chatInput?.focus({ preventScroll: true });
+    requestAnimationFrame(() => {
+      if (els.chatScroll) els.chatScroll.scrollTop = els.chatScroll.scrollHeight;
     });
   }
 
@@ -2040,10 +2170,11 @@
     navigator.serviceWorker.getRegistrations().then((regs) => {
       regs.forEach((r) => r.update());
     });
-    navigator.serviceWorker.register("./sw.js?v=8").catch(() => {});
+    navigator.serviceWorker.register("./sw.js?v=10").catch(() => {});
   }
 
   function init() {
+    renderInicioPainel();
     renderAgenda();
     renderProducao();
     renderEquipe();
@@ -2057,11 +2188,12 @@
     renderPessoal();
     renderTreinamento();
     renderNotificacoes();
-    renderSugestoes();
+    switchTab("inicio");
     bind();
     registerSW();
     syncVoiceControls();
     setVoiceUI("idle");
+    iniciarPlaceholderRotativo();
     bootGreeting();
   }
 
